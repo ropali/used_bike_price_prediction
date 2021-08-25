@@ -1,4 +1,5 @@
 alabaster==0.7.12
+autopep8==1.5.7
 Babel==2.9.1
 beautifulsoup4==4.9.3
 certifi==2021.5.30
@@ -10,6 +11,8 @@ flake8==3.9.2
 idna==3.2
 imagesize==1.2.0
 Jinja2==3.0.1
+joblib==1.0.1
+lxml==4.6.3
 MarkupSafe==2.0.1
 mccabe==0.6.1
 numpy==1.21.2
@@ -23,7 +26,10 @@ python-dateutil==2.8.2
 python-dotenv==0.19.0
 pytz==2021.1
 requests==2.26.0
+scikit-learn==0.24.2
+scipy==1.7.1
 six==1.16.0
+sklearn==0.0
 snowballstemmer==2.1.0
 soupsieve==2.2.1
 Sphinx==4.1.2
@@ -33,5 +39,6 @@ sphinxcontrib-htmlhelp==2.0.0
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
-# Editable install with no version control (src==0.1.0)
+threadpoolctl==2.2.0
+toml==0.10.2
 urllib3==1.26.6
