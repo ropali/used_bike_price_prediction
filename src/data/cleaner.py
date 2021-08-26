@@ -1,4 +1,3 @@
-from numpy.lib.function_base import select
 from ..utils import logger
 from sklearn.impute import KNNImputer, SimpleImputer
 from pandas import DataFrame
