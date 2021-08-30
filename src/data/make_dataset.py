@@ -6,7 +6,7 @@ from ..database.models import BikeModel
 import pandas as pd
 from ..utils.logger import Logger
 import sys
-from .scrapper import Scrapper
+from .scrapper import start_scrapper
 
 logger = Logger(__name__, std_out=True)
 
@@ -37,9 +37,8 @@ def main():
         sys.exit()
 
     if user_input.lower() == 'y':
-        scrapper = Scrapper()
-        scrapper.start()
-
+        start_scrapper()
+        
         table_to_csv(f'select * from {model.TABLE_NAME}', model.con,save_path)
 
     sys.exit()
