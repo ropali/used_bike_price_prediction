@@ -14,7 +14,7 @@ logger = Logger(__name__, std_out=True)
 def table_to_csv(query, db_con, save_path):
     df = pd.read_sql_query(query, db_con)
     logger.info(f'Saving raw data into {save_path}')
-    df.to_csv(save_path)
+    df.to_csv(save_path,index=False)
 
 
 def main():
