@@ -1,6 +1,7 @@
+import json
 from bs4 import BeautifulSoup
 import requests
-from ..database.models import BikeModel
+from ..database.models import BikeModel, UrlVisited
 import time
 from ..utils.logger import Logger
 import math
@@ -13,8 +14,6 @@ class Scrapper:
     source_name = None  # source of the data
 
     base_url = None
-
-    sleep_for = 3
 
     cookies = {}
 
@@ -50,315 +49,169 @@ class Scrapper:
             url_to_scrape = self.base_url + self.pagination.format(i+1)
 
             html = self.get_html_document(url_to_scrape)
-
+            # print(html)
             self.extract(html)
 
             self.logger.info(f'Finished Processing Page No.: {i+1}')
+
             time.sleep(self.sleep_for)
 
         self.logger.info(
             f'Total Data Scrapped from { self.source_name if self.source_name else self.base_url } : {len(self.data)}')
 
-    def save(self, model_name: str, model_year: str, kms_driven: str, location: str, price: str, owner: str, db=True):
-        bike = {
-            'model_name': model_name,
-            'model_year': model_year,
-            'kms_driven': kms_driven,
-            'owner': owner,
-            'location': location,
-            'price': price
-        }
-        self.model.save(bike)
 
-        self.data.append(bike)
+class DroomScrapper:
+    """Scraps the data from www.droom.in"""
 
+    source_name = 'droom.in'
 
-class BikeWaleScrapper(Scrapper):
-    """Scraps the data from www.bikewale.com"""
-    base_url = "https://www.bikewale.com/used/bikes-in-india/"
+    api_url = 'https://cdnaka.acedms.com/v2/search?bucket=bike&category=Motorcycle%2FBike&condition=used&include_premium=1&page={}&rows_per_page=24&selling_format=fixed_price&status=active'
 
-    source_name = 'bikewale.com'
+    per_page = 24
 
-    pagination = 'page-{}/'
-
-    total_pages = 67
-
-    sleep_for = 2
+    sleep_for = 1
 
     data = []
 
     def __init__(self):
-        super().__init__()
+        self.model = BikeModel()
+        self.url_visted = UrlVisited()
+        self.logger = Logger(__name__, std_out=True)
+
+    def get_html_document(self, url):
+        # request for HTML document of given url
+        response = requests.get(url)
+        # response will be provided in JSON format
+        return response.text
 
     def get_total_pages(self):
-        return self.total_pages
+        return 1500
 
-    def extract(self, html_document):
-        
+    
+    def extract_api(self, json_data):
+
+        bike_id = json_data.get('listing_alias')
+
+        model = json_data.get('product_title')
+
+        price = json_data.get('total_payout_value')
+
+        owner = json_data.get('number_of_owners')
+
+        model_year = json_data.get('year')
+
+        locations = json_data.get('location')
+
+        single_loc = None
+
+        if locations:
+            single_loc = locations[0]
+
+        # extract other info from details page usig bs4
+        base_url = "https://droom.in/product/" + bike_id
+
+        if self.url_visted.find(base_url):
+            return
+
+        data = self.extract_html(self.get_html_document(base_url))
+
+        if not data:
+            self.logger.info(
+                f'Could not find data of {model}.Skipping this...')
+            return
+
+        data['model_name'] = model
+        data['price'] = price
+        data['owner'] = owner
+        data['model_year'] = model_year
+        data['location'] = single_loc
+
+        self.model.save(data)
+
+        self.logger.info(f'Saving data of {model} to database...')
+
+        self.url_visted.save({'link': base_url})
+
+    def extract_html(self, html_document):
+        kms_driven = None
+        owner = None
+        mileage = None
+        engine = None
+        power = None
+        wheel_size = None
+
         # create soap object
         soup = BeautifulSoup(html_document, 'lxml')
 
-        bike_list_ele = soup.find('ul', id='used-bikes-list')
+        # d-display-table d-width-100
+        bike_list_ele = soup.find_all(
+            'ul', class_='d-display-table d-width-100')
 
         if not bike_list_ele:
             return
 
-        bike_list = bike_list_ele.find_all('li')
+        for details_ul in bike_list_ele:
+            for li in details_ul:
+                try:
+                    if 'Owner' in li.text:
+                        owner = li.text.strip()
+                    if 'Km' in li.text:
+                        kms_driven = li.text.strip()
+                    if 'Mileage' in li.text:
+                        mileage = li.text.replace('Mileage', '')
+                    if 'Engine' in li.text:
+                        engine = li.text.replace('Engine')
+                    if 'Power' in li.text:
+                        power = li.text.replace('Max Power', '').strip()
+                    if 'Wheel' in li.text:
+                        wheel_size = li.text.replace('Wheel Size').strip()
 
-        for bike in bike_list:
-            tags = bike.find_all('span', class_='model-details-label')
+                except Exception as e:
+                    continue
 
-            # for tag in tags
-            try:
-                model_name = bike.h2.text.split(',')[1]
-                model_year = tags[0].text
-                kms_driven = tags[1].text
-                owner = tags[2].text
-                location = tags[3].text
-            except IndexError as e:
-                self.logger.error(
-                    f'Error occured while processing,skipping this record; {e}',)
-                continue
-
-            price = bike.find('span', class_='font22').text
-
-            self.save(model_name, model_year,
-                      kms_driven, location, price, owner)
-
-
-class CarAndBikeScrapper(Scrapper):
-    """Scraps the data from www.bikewale.com"""
-    base_url = "https://www.carandbike.com/used/bikes-for-sale/"
-
-    source_name = 'carandbike.com'
-
-    pagination = '{}/'
-
-    per_page = 18
-
-    def __init__(self):
-        super().__init__()
-
-    def get_total_pages(self):
-        html_document = self.get_html_document(self.base_url)
-        soup = BeautifulSoup(html_document, 'lxml')
-        total_bikes_title = soup.find('h1', class_='title-page').text
-
-        if total_bikes_title:
-            try:
-                total = int(total_bikes_title.split()[0])
-            except Exception as e:
-                self.logger.error(str(e))
-                return 0
-
-            return math.floor(total / self.per_page)
-
-        return 0
-
-    def extract(self, html_document):
-
-        # create soap object
-        soup = BeautifulSoup(html_document, 'lxml')
-
-        bike_list = soup.find('div', class_='clist__main').find_all(
-            'div', class_='usedcar-widget')
-
-        for bike in bike_list:
-            title = bike.find('h4', class_='usedcar-widget__ttl').text
-            # title contains model year & model name
-            title_splits = title.split()
-            model_year = title_splits[0]
-
-            title_splits.pop(0)
-            model_name = " ".join(title_splits)
-
-            price = bike.find('div', class_='usedcar-widget__price').text
-
-            location = bike.find('div', class_='usedcar-widget__loc-txt').text
-
-            kms_owner_info = bike.find(
-                'ul', class_='usedcar-widget__infolist').find_all('li')
-
-            kms_driven = kms_owner_info[0].text
-
-            owner = kms_owner_info[2].text
-
-            # print(model_name,model_year,kms_driven,owner,location,price)
-            self.save(model_name, model_year,
-                      kms_driven, location, price, owner)
-
-
-class Bikes24Scrapper(Scrapper):
-    """Scraps the data from www.bikes24.com"""
-    base_url = "https://www.bikes24.com/buy-used-bikes-faridabad/"
-
-    source_name = 'bikes24.com'
-
-    pagination = None
-
-    per_page = None
-
-    def __init__(self):
-        super().__init__()
-        self.options = webdriver.ChromeOptions()
-        self.options.add_argument("--start-maximized")
-
-        self.driver = webdriver.Chrome(chrome_options=self.options)
-
-    def get_total_pages(self):
-        return 1
-
-    def extract(self, html_document):
-        model_name = None
-        model_year = None
-        kms_driven = None
-        owner = None
-        # constant location as the location needs to be set manually but all shows same result
-        location = 'Delhi'
-        price = None
-
-        # create soap object
-        soup = BeautifulSoup(html_document, 'lxml')
-        # Details are inside the col-4 class div
-        bike_list = soup.find_all('div', class_='col-4')
-
-        for bike in bike_list:
-
-            model_name_ele = bike.find('h5')
-
-            if model_name_ele:
-                # headline has model year & model name info
-                splits = model_name_ele.text.split(' ')
-                model_name = splits[1]
-                model_year = splits[0]
-
-            price_ele = bike.find('h3')
-            if price_ele:
-                price = price_ele.text
-
-            # inside the p tag there are spans contains info about the kms driven and owner
-            para = bike.find('p')
-
-            if para:
-                spans = para.find_all('span')
-                if spans:
-                    kms_driven = spans[0].text
-                    owner = spans[1].text
-
-            if model_name and model_year and kms_driven and owner and location and price:
-                # print(model_name,model_year,kms_driven,owner,location,price)
-                self.save(model_name, model_year,
-                          kms_driven, location, price, owner)
+        return {
+            'owner': owner,
+            'kms_driven': kms_driven,
+            'mileage': mileage,
+            'engine': engine,
+            'power': power,
+            'wheel_size': wheel_size
+        }
 
     def start(self):
-        self.driver.get(self.base_url)
-        time.sleep(2)
-        first_popup = self.driver.find_element_by_xpath(
-            '/html/body/div[1]/div/div[1]/div[2]/div/div/h3/div/img')
 
-        first_popup.click()
+        self.logger.info(f'Started scrapping data from {self.source_name}')
+        self.logger.info(f'Total Pages Found {self.get_total_pages()}.')
+        for i in range(self.get_total_pages()):
+            self.logger.info(f'Processing page no. {i+1}')
 
-        time.sleep(2)
+            url = self.api_url.format(i+1)
 
-        html = self.driver.find_element_by_tag_name('html')
+            if self.url_visted.find(url):
+                continue
 
-        for i in range(10):
-            html.send_keys(Keys.END)
-            time.sleep(5)
+            response = requests.get(url)
 
-        bike_list = self.driver.find_element_by_xpath(
-            '/html/body/div[1]/div/div[2]/div/div[2]/div[2]/div[2]/div').get_attribute('innerHTML')
+            data = response.json()
 
-        self.driver.close()
+            if data.get('data'):
+                listings = data.get('data').get('listings')
 
-        self.extract(bike_list)
+                if listings:
+                    for item in listings:
+                        self.extract_api(item)
+                        time.sleep(1)
 
-
-class DroomScrapper(Scrapper):
-    """Scraps the data from www.droom.in"""
-    base_url = "https://droom.in/bikes/used"
-
-    source_name = 'droom.in'
-
-    pagination = '?page={}&tab=grid&display_category=All+Motorcycles&condition=used/'
-
-    per_page = 20
-
-    def __init__(self):
-        super().__init__()
-
-    def get_total_pages(self):
-        return 120
-
-    def extract(self, html_document):
-
-        model_name = None
-        model_year = None
-        kms_driven = None
-        owner = None
-
-        location = None
-        price = None
-
-        # create soap object
-        soup = BeautifulSoup(html_document, 'lxml')
-
-        bike_list = soup.find('div', id='search_results').find_all(
-            'div', class_='col-lg-3')
-
-        for bike in bike_list:
-            title = bike.find('h4', class_='heading')
-
-            if title:
-                title_splits = title.text.split()
-                model_year = title_splits[-1]
-                title_splits.pop(-1)
-                model_name = ' '.join(title_splits)
-
-            price_ele = bike.find('div', class_='price')
-
-            if price_ele:
-                price = price_ele.text
-
-            # find kms driven
-            labels = bike.find_all('label', class_='d-display-block')
-
-            if labels:
-                kms_driven = labels[0].text.strip()
-                location = labels[3].text.strip()
-                owner = labels[4].text.strip()
-
-            if model_name and model_year and kms_driven and owner and location and price:
-                # print(model_name, model_year, kms_driven, owner, location, price)
-                self.save(model_name, model_year,
-                          kms_driven, location, price, owner)
+            self.logger.info(f'Processing page no. {i+1}')
+            self.url_visted.save({'link': url})
+            time.sleep(self.sleep_for)
 
 
 def start_scrapper():
-    # scrap from bikewale
-    bikewale_scrapper = BikeWaleScrapper()
-
-    bikewale_scrapper.start()
-
-    # start scrapping from carandbike
-    # it shows different result based on different location passed via cookies
-    locations = ['New Delhi','Mumbai','Bangalore','Chennai','Hyderabad','Ahmedabad','Kolkata']
-
-    for loc in locations:
-        scrapper = CarAndBikeScrapper()
-        scrapper.cookies = {'userCity':loc}
-        scrapper.start()
-
-    # scrap from bikes24
-    bikes24_scrapper = Bikes24Scrapper()
-
-    bikes24_scrapper.start()
-
-    # scrap from droom
     droom_scrapper = DroomScrapper()
 
     droom_scrapper.start()
 
+
 if __name__ == '__main__':
     start_scrapper()
-    
