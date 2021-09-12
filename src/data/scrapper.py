@@ -187,8 +187,9 @@ class DroomScrapper:
 
             url = self.api_url.format(i+1)
 
-            # if self.url_visted.find(url):
-            #     continue
+            if self.url_visted.find(url):
+                self.logger.info(f'Already processed page no. {i+1}')
+                continue
 
             response = requests.get(url)
 
@@ -202,7 +203,7 @@ class DroomScrapper:
                         self.extract_api(item)
                         time.sleep(1)
 
-            self.logger.info(f'Processing page no. {i+1}')
+            self.logger.info(f'Processed page no. {i+1}')
             self.url_visted.save({'link': url})
             # time.sleep(self.sleep_for)
 
