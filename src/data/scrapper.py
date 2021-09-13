@@ -65,7 +65,7 @@ class DroomScrapper:
 
     source_name = 'droom.in'
 
-    api_url = 'https://cdnaka.acedms.com/v2/search?bucket=bike&category=Motorcycle%2FBike&condition=used&include_premium=1&page={}&rows_per_page=24&selling_format=fixed_price&status=active'
+    api_url = 'https://cdnaka.acedms.com/v2/search?bucket=bike&category=Motorcycle%2FBike&condition=used&include_premium=1&page={}&rows_per_page={}&selling_format=fixed_price&status=active'
 
     per_page = 48
 
@@ -85,7 +85,7 @@ class DroomScrapper:
         return response.text
 
     def get_total_pages(self):
-        return int(38000 / self.per_page)
+        return int(38166 / self.per_page)
 
     
     def extract_api(self, json_data):
@@ -185,7 +185,7 @@ class DroomScrapper:
         for i in range(self.get_total_pages()):
             self.logger.info(f'Processing page no. {i+1}')
 
-            url = self.api_url.format(i+1)
+            url = self.api_url.format(i+1,self.per_page)
 
             if self.url_visted.find(url):
                 self.logger.info(f'Already processed page no. {i+1}')
@@ -202,6 +202,8 @@ class DroomScrapper:
                     for item in listings:
                         self.extract_api(item)
                         time.sleep(1)
+            else:
+                self.logger.info(f'Data not found for page no. {i+1}')
 
             self.logger.info(f'Processed page no. {i+1}')
             self.url_visted.save({'link': url})
