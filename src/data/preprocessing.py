@@ -148,9 +148,4 @@ class Preprocessor:
 
 if __name__ == '__main__':
     Preprocessor().start()
-    # p = Path('data/raw')
-
-    # print(p.exists())
-    # print(p.absolute())
-    # print(p.name)
-    # print(str(p))
+    

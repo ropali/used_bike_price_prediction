@@ -65,7 +65,7 @@ class DroomScrapper:
 
     source_name = 'droom.in'
 
-    api_url = 'https://cdnaka.acedms.com/v2/search?bucket=bike&category=Motorcycle%2FBike&condition=used&include_premium=1&page={}&rows_per_page={}&selling_format=fixed_price&status=active'
+    api_url = 'https://cdnaka.acedms.com/v2/search?bucket=bike&category=Motorcycle%2FBike&condition=used&include_premium=1&page={}&rows_per_page={}'
 
     per_page = 48
 

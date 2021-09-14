@@ -24,7 +24,6 @@ class FeatureBuilder:
         return self.df
 
    
-
     def _make_brand_feature(self):
         """There are too many models, let try to create a brand category using the first word of the model name."""
         self.df['brand'] = self.df['model_name'].apply(lambda x: ' '.join(x.split()[:1]))
