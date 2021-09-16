@@ -38,7 +38,7 @@ class Preprocessor:
 
         self.logger.info(f'Saving cleaned file at {self.cleaned_file}')
 
-        self.df.to_csv(str(self.cleaned_file))
+        self.df.to_csv(str(self.cleaned_file),index=False)
 
     def _strip_features(self):
         # if not self.df:

@@ -6,7 +6,7 @@ from ..utils.logger import Logger
 class Outliers:
 
     def __init__(self,file: Path):
-        self.logger = Logger(__name__, __name__ == '__main__', 'out.log')
+        self.logger = Logger(__name__, __name__ == '__main__')
 
         self.file = Path(file)
 
