@@ -22,7 +22,7 @@ class Preprocessor:
         self.df = pd.read_csv(str(self.data_file))
         return self.df
 
-    def start(self):
+    def start(self, save_file=False):
         self.load_data()
         self.logger.info('Starting cleaning process.')
         self._strip_features()
@@ -36,9 +36,12 @@ class Preprocessor:
         self._drop_empty_cols()
         self._remove_duplicates()
 
-        self.logger.info(f'Saving cleaned file at {self.cleaned_file}')
+        if save_file:
+            self.logger.info(f'Saving cleaned file at {self.cleaned_file}')
 
-        self.df.to_csv(str(self.cleaned_file),index=False)
+            self.df.to_csv(str(self.cleaned_file), index=False)
+
+        return self.df
 
     def _strip_features(self):
         # if not self.df:
@@ -129,10 +132,11 @@ class Preprocessor:
     def _fix_col_type(self):
         """Fix the columns types"""
         cols = ['kms_driven', 'price']
-        
+
         for col in cols:
-            self.df[col] = pd.to_numeric(self.df[col], errors='coerce', downcast='integer')
-        
+            self.df[col] = pd.to_numeric(
+                self.df[col], errors='coerce', downcast='integer')
+
         self.logger.info(f'Fixing dtype of columns {cols}.')
 
     def _drop_empty_cols(self):
@@ -148,4 +152,3 @@ class Preprocessor:
 
 if __name__ == '__main__':
     Preprocessor().start()
-    
