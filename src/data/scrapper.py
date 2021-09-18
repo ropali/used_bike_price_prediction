@@ -110,8 +110,8 @@ class DroomScrapper:
         # extract other info from details page usig bs4
         base_url = "https://droom.in/product/" + bike_id
 
-        if self.url_visted.find(base_url):
-            return
+        # if self.url_visted.find(base_url):
+        #     return
 
         data = self.extract_html(self.get_html_document(base_url))
 
@@ -136,9 +136,8 @@ class DroomScrapper:
         kms_driven = None
         owner = None
         mileage = None
-        engine = None
         power = None
-        wheel_size = None
+       
 
         # create soap object
         soup = BeautifulSoup(html_document, 'lxml')
@@ -159,12 +158,9 @@ class DroomScrapper:
                         kms_driven = li.text.strip()
                     if 'Mileage' in li.text:
                         mileage = li.text.replace('Mileage', '')
-                    if 'Engine' in li.text:
-                        engine = li.text.replace('Engine')
                     if 'Power' in li.text:
                         power = li.text.replace('Max Power', '').strip()
-                    if 'Wheel' in li.text:
-                        wheel_size = li.text.replace('Wheel Size').strip()
+                    
 
                 except Exception as e:
                     continue
@@ -173,9 +169,7 @@ class DroomScrapper:
             'owner': owner,
             'kms_driven': kms_driven,
             'mileage': mileage,
-            'engine': engine,
             'power': power,
-            'wheel_size': wheel_size
         }
 
     def start(self):
