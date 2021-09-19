@@ -11,6 +11,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, MinMaxScaler
+from sklearn.impute import KNNImputer
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
 
@@ -61,9 +62,38 @@ class BaseModel:
         raise NotImplemented(
             f'This method is not implemented for {self.__class__.__name__}')
 
+    def impute(self):
+        print(self.df.isnull().sum())
+        self.df.price.fillna(self.df.price.mean(),inplace=True)
+        print('========After======')
+        print(self.df.max())
+        num_cols = [ col for col in self.X.columns if self.X[col].dtypes != 'object' ]
+        
+        X_imputer = KNNImputer(n_neighbors=7,weights='distance')  
+
+        X_imputer.fit(self.X_train[num_cols])
+
+        self.X_train.loc[:][num_cols] = X_imputer.fit_transform(self.X_train[num_cols])
+        self.X_test.loc[:][num_cols] = X_imputer.transform(self.X_test[num_cols])
+
+        # self.y_train.fillna(self.y_train.mean())
+        # self.y_test.fillna(self.y_test.mean())
+        # print(self.y_train)
+        # y_imputer = KNNImputer(n_neighbors=7,weights='distance')
+        # y_imputer.fit([self.y_train])
+
+        # self.y_train.loc[:][0] = y_imputer.fit_transform([self.y_train])
+        # self.y_test.loc[:][0] = y_imputer.transform([self.y_test])
+        # print(self.y_train)
+        
+
+        
     def train(self):
         model = self.get_model()
 
+        # first impute missing values
+        self.impute()
+        # print(self.X_train.isnull().sum())
         pipe = self.build_pipeline(model)
 
         pipe.fit(self.X_train, self.y_train)
@@ -103,7 +133,7 @@ class _LinearRegressionModel(BaseModel):
 
 class ModelFactory:
     models = {
-        'LinearRegression': _LinearRegressionModel
+        'lr': _LinearRegressionModel
     }
 
     def get_model(self,model_name):
@@ -117,10 +147,6 @@ class ModelFactory:
 
 
 def main():
-    pass
-
-
-if __name__ == '__main__':
     preprocessor = Preprocessor()
 
     df = preprocessor.start(True)
@@ -129,14 +155,25 @@ if __name__ == '__main__':
 
     df = feat_builder.build()
 
-    model_cls = ModelFactory().get_model('LinearRegression')
+    print(df.isnull().sum())
+    
+    # print(df.describe())
+
+    model_cls = ModelFactory().get_model('lr')
 
     model = model_cls(df)
 
-    train_result,test_result = model.train()
+    model.train()
+    # print('NaN Values')
+    # print(model.X_train.isna().sum())
+    # train_result,test_result = model.train()
 
-    print(train_result)
-    print('\n')
-    print(test_result)
+    # print(train_result)
+    # print('\n')
+    # print(test_result)
+
+
+if __name__ == '__main__':
+    main()
 
 

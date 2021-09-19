@@ -68,7 +68,10 @@ class Preprocessor:
             if 'mileage' in val.lower():
                 return np.nan
 
-            return val.replace(',', '')
+            try:
+                return int(val)
+            except ValueError:
+                return np.nan
 
         self.df['kms_driven'] = self.df.kms_driven.apply(clean_kms_driven)
         self.logger.info('Cleaned `kms_driven` column.')
@@ -103,7 +106,7 @@ class Preprocessor:
             if 'or more' in val.lower():
                 return 'fourth'
 
-            return val
+            return val.strip()
 
         self.df['owner'] = self.df['owner'].apply(clean_owner)
         self.logger.info('Cleaned `owner` column.')
@@ -131,13 +134,14 @@ class Preprocessor:
 
     def _fix_col_type(self):
         """Fix the columns types"""
-        cols = ['kms_driven', 'price']
+        cols = ['kms_driven', 'price', 'mileage', 'power']
 
         for col in cols:
             self.df[col] = pd.to_numeric(
                 self.df[col], errors='coerce', downcast='integer')
+            # self.df[col] = self.df[col].astype(int, errors='ignore')
 
-        self.logger.info(f'Fixing dtype of columns {cols}.')
+        self.logger.info(f'Fixed dtype of columns {cols}.')
 
     def _drop_empty_cols(self):
         self.df.dropna(how='all', axis=1, inplace=True)

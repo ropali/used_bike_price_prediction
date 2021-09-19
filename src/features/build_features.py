@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 from ..utils.logger import Logger
 import re
+import numpy as np
 
 
 class FeatureBuilder:
@@ -50,9 +51,9 @@ class FeatureBuilder:
         def extract_cc(val):
             match = re.search(r"\d{2,}(cc)", val)
             if match:
-                return match.group().replace('cc', '')
+                return int(match.group().replace('cc', ''))
             else:
-                return None
+                return np.nan
 
         self.df['engine'] = self.df['model_name'].apply(extract_cc)
 
