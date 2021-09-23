@@ -1,20 +1,14 @@
 from pathlib import Path
 import pandas as pd
+from pandas.core.frame import DataFrame
 from ..utils.logger import Logger
 
 
 class Outliers:
 
-    def __init__(self,file: Path):
+    def __init__(self,df: DataFrame):
         self.logger = Logger(__name__, __name__ == '__main__')
-
-        self.file = Path(file)
-
-        if not self.file.exists():
-            err = f"This file does not exist {str(self.file)}"
-            raise FileNotFoundError(err)
-
-        self.df = pd.read_csv(self.file)
+        self.df = df
     
 
     def detect(self):
@@ -41,6 +35,8 @@ class Outliers:
         self.logger.info(f"Dataset shape after outlier removal : {self.df.shape}")
 
         self.logger.info(f"Finished outlier detection.")
+
+        return self.df
 
 
     def _get_num_features(self):

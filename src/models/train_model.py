@@ -4,25 +4,29 @@ from pathlib import Path
 from ..data.preprocessing import Preprocessor
 from ..features.build_features import FeatureBuilder
 from ..utils.logger import Logger
+from ..features.outliers import Outliers
 from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 from .metrics import Metrics
-from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, MinMaxScaler
 from sklearn.impute import KNNImputer
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBRegressor
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.ensemble import GradientBoostingRegressor
 
 
 class Model:
-    def __init__(self, df: DataFrame, cross_validate = False):
+    def __init__(self, df: DataFrame, cross_validate = True):
         self.logger = Logger(__name__, __name__ == '__main__')
         self.df = df
         self.cross_validate = cross_validate
 
         self._X_train, self._X_test, self._y_train, self._y_test = train_test_split(
-            self.X, self.y, test_size=.25, random_state=123)
+            self.X, self.y, test_size=.25,random_state=42)
 
         self.metrics = Metrics()
 
@@ -85,7 +89,7 @@ class Model:
         # first impute missing values
         self.impute()
 
-        pipe = self._build_pipeline(self.estimator)
+        pipe = self._build_pipeline()
 
         pipe.fit(self.X_train, self.y_train)
 
@@ -97,14 +101,12 @@ class Model:
 
         return train_metrics_df, test_metrics_df
 
-    def _build_pipeline(self, estimator):
-        if not estimator:
-            raise Exception(f'Invalid estimator value {estimator}')
-
+    def _build_pipeline(self):
         return Pipeline([
-            ('category_transformer', self._col_transformer()),
-            ('estimator', estimator),
-        ])
+                ('category_transformer', self._col_transformer()),
+                ('estimator', self.estimator),
+            ])
+        
 
     def _col_transformer(self):
         return ColumnTransformer([
@@ -120,18 +122,46 @@ class _LinearRegressionModel(Model):
     def __init__(self, df: DataFrame):
         super().__init__(df)
 
+        self._y_train = np.log1p(self._y_train)
+        self._y_test = np.log1p(self._y_test)
+
         self.estimator = LinearRegression()
 
-    # @property
-    # def y_train(self):
-    #     return np.log1p(self._y_train)
+class _RandomForestModel(Model):
 
+    def __init__(self, df: DataFrame):
+        super().__init__(df)
+
+        self.estimator = RandomForestRegressor(n_estimators=150)
+
+class _XGBoostModel(Model):
+    def __init__(self, df: DataFrame, cross_validate=True):
+        super().__init__(df, cross_validate=cross_validate)
+
+        self.estimator = XGBRegressor()
+        
+class _KNNModel(Model):
+    def __init__(self, df: DataFrame, cross_validate=True):
+        super().__init__(df, cross_validate=cross_validate)
+
+        self.estimator = KNeighborsRegressor(n_neighbors=3)
+
+class _GradienBoostModel(Model):
+
+    def __init__(self, df: DataFrame, cross_validate=True):
+        super().__init__(df, cross_validate=cross_validate)
+
+        self.estimator = GradientBoostingRegressor()
     
 
 
 class ModelFactory:
     models = {
-        'lr': _LinearRegressionModel
+        'linear_regression': _LinearRegressionModel,
+        'random_forest': _RandomForestModel,
+        'xgboost': _XGBoostModel,
+        'knn': _KNNModel,
+        'gradient_boost': _GradienBoostModel
     }
 
     def get_model(self, model_name):
@@ -152,17 +182,30 @@ def main():
 
     df = feat_builder.build()
 
-    model_cls = ModelFactory().get_model('lr')
+    df = Outliers(df).detect()
 
-    model = model_cls(df)
+    print('Data Points',df.shape)
 
-    train_result, test_result = model.train()
+    results = []
+    
+    for name, model in ModelFactory.models.items():
 
-    print('Train Result\n')
-    print(train_result)
-    print('\n')
-    print('Test Result\n')
-    print(test_result)
+        print(f'Training Model :: {name}')
+        train_result, test_result = model(df).train()
+
+        train_result['type'] = 'Train'
+        train_result['model'] = name
+
+        test_result['type'] = 'Test'
+        test_result['model'] = name
+
+        results.append(train_result)
+        results.append(test_result)
+
+
+    result_df = pd.concat(results,axis=0,ignore_index=True)
+
+    print(result_df)
 
 
 if __name__ == '__main__':

@@ -139,7 +139,7 @@ class Preprocessor:
         for col in cols:
             self.df[col] = pd.to_numeric(
                 self.df[col], errors='coerce', downcast='integer')
-            # self.df[col] = self.df[col].astype(int, errors='ignore')
+            
 
         self.logger.info(f'Fixed dtype of columns {cols}.')
 
@@ -149,7 +149,7 @@ class Preprocessor:
 
     def _remove_duplicates(self):
         dups_count = self.df.duplicated().sum()
-        self.logger.info(f'Found {dups_count} records.')
+        self.logger.info(f'Found {dups_count} duplicate records.')
         self.df = self.df[~self.df.duplicated()]
         self.logger.info('Removed all the duplicates records.')
 
