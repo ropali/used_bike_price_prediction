@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from pathlib import Path
+import matplotlib.pyplot as plt
 from ..data.preprocessing import Preprocessor
 from ..features.build_features import FeatureBuilder
 from ..utils.logger import Logger
@@ -209,6 +209,11 @@ def main():
     result_df = pd.concat(results,axis=0,ignore_index=True)
 
     print(result_df)
+
+    best_result = result_df.iloc[result_df[result_df['type'] == 'Test']['Adjusted R^2'].argmax()] #result_df[result_df['type'] == 'Test']['Adjusted R^2'].max()
+    
+    print(f'Best Score of {best_result.model} is ',best_result['Adjusted R^2'])
+
 
 
 if __name__ == '__main__':
