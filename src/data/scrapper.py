@@ -110,8 +110,8 @@ class DroomScrapper:
         # extract other info from details page usig bs4
         base_url = "https://droom.in/product/" + bike_id
 
-        # if self.url_visted.find(base_url):
-        #     return
+        if self.url_visted.find(base_url):
+            return
 
         data = self.extract_html(self.get_html_document(base_url))
 

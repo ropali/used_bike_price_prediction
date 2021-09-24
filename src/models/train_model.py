@@ -81,7 +81,7 @@ class Model:
         self.X_test.loc[:][num_cols] = X_imputer.transform(
             self.X_test[num_cols])
 
-        y_imputer = KNNImputer(n_neighbors=7, weights='distance')
+        y_imputer = KNNImputer(n_neighbors=3, weights='uniform')
         y_imputer.fit([self.y_train])
 
     def train(self):
@@ -121,6 +121,9 @@ class Model:
 class _LinearRegressionModel(Model):
     def __init__(self, df: DataFrame):
         super().__init__(df)
+
+        self.y_train = self.y_train.fillna(self.y_train.mean())
+        self.y_test = self.y_test.fillna(self.y_test.mean())
 
         self._y_train = np.log1p(self._y_train)
         self._y_test = np.log1p(self._y_test)
