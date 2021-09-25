@@ -162,7 +162,7 @@ class ModelFactory:
     models = {
         'linear_regression': _LinearRegressionModel,
         'random_forest': _RandomForestModel,
-        'xgboost': _XGBoostModel,
+        # 'xgboost': _XGBoostModel,
         'knn': _KNNModel,
         'gradient_boost': _GradienBoostModel
     }
@@ -210,9 +210,13 @@ def main():
 
     print(result_df)
 
-    best_result = result_df.iloc[result_df[result_df['type'] == 'Test']['Adjusted R^2'].argmax()] #result_df[result_df['type'] == 'Test']['Adjusted R^2'].max()
+    test_results = result_df[result_df['type'] == 'Test']
     
-    print(f'Best Score of {best_result.model} is ',best_result['Adjusted R^2'])
+    idmax = test_results['Adjusted R^2'].values.argmax()
+
+    best_result = test_results.iloc[idmax]
+    
+    print(f'Best model is {best_result.model}({best_result.type}) with score',best_result['Adjusted R^2'])
 
 
 
