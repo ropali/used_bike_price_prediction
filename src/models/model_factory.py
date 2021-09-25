@@ -10,10 +10,11 @@ from sklearn.impute import KNNImputer
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
-from xgboost import XGBRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+import pickle
+
 
 class Model:
     hyper_params = {}
@@ -87,21 +88,21 @@ class Model:
         # first impute missing values
         self.impute()
 
-        pipe = self._build_pipeline()
+        self.pipe = self._build_pipeline()
 
-        pipe.fit(self.X_train, self.y_train)
+        self.pipe.fit(self.X_train, self.y_train)
 
         train_metrics_df = self.metrics.model_perf(
-            pipe, self.X_train, self.y_train, self.cross_validate)
+            self.pipe, self.X_train, self.y_train, self.cross_validate)
 
         test_metrics_df = self.metrics.model_perf(
-            pipe, self.X_test, self.y_test, self.cross_validate)
+            self.pipe, self.X_test, self.y_test, self.cross_validate)
 
         return train_metrics_df, test_metrics_df
 
     def hyper_tuning(self):
         _pipe_hyper_params = {}
-        
+
         if self.hyper_params:
             for k, v in self.hyper_params.items():
                 _pipe_hyper_params[f'estimator__{k}'] = v
@@ -114,9 +115,9 @@ class Model:
 
             self.impute()
 
-            pipe = self._build_pipeline()
+            self.pipe = self._build_pipeline()
 
-            model = RandomizedSearchCV(pipe, _pipe_hyper_params, cv=5)
+            model = RandomizedSearchCV(self.pipe, _pipe_hyper_params, cv=5)
 
             model.fit(self.X_train, self.y_train)
 
@@ -147,6 +148,15 @@ class Model:
                 sparse=False, handle_unknown='error', drop='first',), [2, 5]),
         ], remainder='passthrough')
 
+    def save(self, filepath: str):
+        if not self.pipe:
+            raise Exception(
+                'Model is not trained. Start model trainign first.')
+
+        pickle.dump(self.pipe, open(filepath, 'wb'))
+
+        self.logger.info(f'Model file saved at {filepath}')
+
 
 class _LinearRegressionModel(Model):
     def __init__(self, df: DataFrame):
@@ -164,12 +174,12 @@ class _LinearRegressionModel(Model):
 class _RandomForestModel(Model):
 
     hyper_params = {
-            'criterion': ['mse', 'mae'],
-            'n_estimators': [100, 110, 120, 130],
-            'max_depth': [5, 10, 15, 20, 25, 30],
-            'min_samples_split': range(2, 20),
-            'max_features': ['auto', 'sqrt', 'log2'],
-        }
+        'criterion': ['mse', 'mae'],
+        'n_estimators': [100, 110, 120, 130, 140, 150, 160, 200],
+        'max_depth': [5, 10, 15, 20, 25, 30, 35, 40],
+        'min_samples_split': range(2, 30),
+        'max_features': ['auto', 'sqrt', 'log2'],
+    }
 
     def __init__(self, df: DataFrame):
         super().__init__(df)
@@ -180,10 +190,10 @@ class _RandomForestModel(Model):
 class _KNNModel(Model):
 
     hyper_params = {
-        'n_neighbors': [5,7,9,11,13],
-        'weights': ['uniform','distance'],
-        'algorithm': ['auto','ball_tree','kd_tree','brute'],
-        'leaf_size': range(30,50)
+        'n_neighbors': [5, 7, 9, 11, 13],
+        'weights': ['uniform', 'distance'],
+        'algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'],
+        'leaf_size': range(30, 50)
     }
 
     def __init__(self, df: DataFrame, cross_validate=True):
@@ -195,12 +205,12 @@ class _KNNModel(Model):
 class _GradienBoostModel(Model):
 
     hyper_params = {
-        'loss': ['squared_error','ls','absolute_error','lad','huber','quantile'],
-        'learning_rate':[.1,.01,.001,.0001],
-        'n_estimators': [100, 110, 120, 130,140,150],
-        'criterion': ['friedman_mse','squared_error','mse','mae'],
-        'min_samples_split': [2,3,4,5,6,7,8,9,10],
-        'max_depth': [3,4,5,6,7,8,9,10]
+        'loss': ['squared_error', 'ls', 'absolute_error', 'lad', 'huber', 'quantile'],
+        'learning_rate': [.1, .01, .001, .0001],
+        'n_estimators': [100, 110, 120, 130, 140, 150],
+        'criterion': ['friedman_mse', 'squared_error', 'mse', 'mae'],
+        'min_samples_split': [2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'max_depth': [3, 4, 5, 6, 7, 8, 9, 10]
     }
 
     def __init__(self, df: DataFrame, cross_validate=True):
@@ -224,4 +234,3 @@ class ModelFactory:
             raise ValueError(f"{model_name}: This model does not exist!")
 
         return model
-
