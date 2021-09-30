@@ -175,16 +175,17 @@ class _RandomForestModel(Model):
 
     hyper_params = {
         'criterion': ['mse', 'mae'],
-        'n_estimators': [100, 110, 120, 130, 140, 150, 160, 200],
+        'n_estimators': [100,150, 200,250,300,350],
         'max_depth': [5, 10, 15, 20, 25, 30, 35, 40],
         'min_samples_split': range(2, 30),
         'max_features': ['auto', 'sqrt', 'log2'],
+        'min_samples_leaf':[50,60,80,100,120,150]
     }
 
     def __init__(self, df: DataFrame):
         super().__init__(df)
 
-        self.estimator = RandomForestRegressor(n_estimators=150)
+        self.estimator = RandomForestRegressor(n_estimators=200)
 
 
 class _KNNModel(Model):
