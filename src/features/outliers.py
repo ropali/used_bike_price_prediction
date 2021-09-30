@@ -33,7 +33,7 @@ class Outliers:
             self.logger.info(f"Outliers removed for {col} based on min/max quantile of (.1, .99).")
 
         # remove bikes which has age more than 15 yrs
-        self.df = self.df[self.df['age'] <= 15]
+        self.df = self.df[self.df['age'] <= 16]
 
         self.logger.info(f"Dataset shape after outlier removal : {self.df.shape}")
 
