@@ -33,7 +33,7 @@ def main():
 
     df = Outliers(df).detect()
 
-    print('Training Data Points', df.shape)
+    logger.info('Training Data Points', df.shape)
 
     best_model = None
 
