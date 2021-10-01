@@ -13,13 +13,11 @@ A predictive model to get the resell value of any bike in India given some featu
     │   ├── processed      <- The final, canonical data sets for modeling.
     │   └── raw            <- The original, immutable data dump.
     │
-    │
     ├── models             <- Trained and serialized models, model predictions, or model summaries
     │
     ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
     │                         and `-` delimited description, e.g.
     │                         `1.0-initial-data-exploration`.
-    │
     ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
     │
     ├── reports            <- Generated analysis as HTML, PDF, LaTeX, csv etc.
@@ -49,6 +47,15 @@ A predictive model to get the resell value of any bike in India given some featu
 
 
 --------
+## Demo
+1. A android application has been developed for demo using Flutter.
+
+    Android apk file - https://github.com/ropali/whats_my_bike_worth/releases
+
+    Repo - https://github.com/ropali/whats_my_bike_worth
+2. The same app has been converted to web app as well.Deployed on heroku, find the demo here
+https://whatsmybikeworth.herokuapp.com
+
 ## Installation
 Clone this repo in your local machine. Create a virtual environment to install the packages like this,
 
