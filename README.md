@@ -85,11 +85,11 @@ To scrape the data from source then run this command.
 It will check for local sqlite database and if could not find then will ask you start the scrapping.
 
 ## Training Model
-To start training the model you can start by using this command,
+To train the model you can start the training by using this command,
 ```
 > python -m src.models.train_model
 ```
-All the intermediatery steps like pre-processing,feature engineering, outlier removal will be performed automatically. All the generated models will be saved in `models` directory.
+All the in between steps like pre-processing,feature engineering, outlier removal will be performed automatically. All the generated models will be saved in `models` directory.
 
 ## Visualization
 To generate basic visualization for the dataset, you can use this command.
