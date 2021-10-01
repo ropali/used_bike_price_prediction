@@ -59,7 +59,9 @@ https://whatsmybikeworth.herokuapp.com
 ## Installation
 Clone this repo in your local machine. Create a virtual environment to install the packages like this,
 
-```> virtualenv venv```
+```
+> virtualenv venv
+```
 After it successfully creates virtual environment then activate it.
 
 ```
