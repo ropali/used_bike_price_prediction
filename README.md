@@ -1,5 +1,5 @@
 # Used Bike Price Prediction Using Machine Learning
-A predictive model to get the resell value of any bike in India given some features like brand,mileage power etc.
+A predictive model to get the resell value in rupees of any bike in India given some features like brand,mileage power etc.
 
 
 ## Project Organization
@@ -75,7 +75,7 @@ Now install all the require packages from `requirements.txt` file like this,
 ```> pip install -r requirements.txt```
 
 
-## Making Dataset
+## Dataset
 This repo already contains the data in `data/raw/data.csv` which you can directly use. Or you can scrape the data directly from the source using the script.The orinal way to generate a dataset is to collect a data from source and store it in the sqlite database & then export the dataset into .csv file.
 To scrape the data from source then run this command.
 
@@ -83,6 +83,8 @@ To scrape the data from source then run this command.
 > python -m src.data.make_dataset
 ```
 It will check for local sqlite database and if could not find then will ask you start the scrapping.
+
+To know about the dataset follow this document `references/DATA.md`
 
 ## Training Model
 To train the model you can start the training by using this command,
