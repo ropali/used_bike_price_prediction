@@ -1,6 +1,14 @@
 # Used Bike Price Prediction Using Machine Learning
 A predictive model to get the resell value in rupees of any bike in India given some features like brand,mileage power etc.
 
+## Demo
+1. An android application has been developed for demo using Flutter.
+
+    Android apk file - https://github.com/ropali/whats_my_bike_worth/releases
+
+    Repo - https://github.com/ropali/whats_my_bike_worth
+2. The same app has been converted to web app as well.Deployed on heroku, find the demo here
+https://whatsmybikeworth.herokuapp.com
 
 ## Project Organization
 ------------
@@ -47,14 +55,7 @@ A predictive model to get the resell value in rupees of any bike in India given 
 
 
 --------
-## Demo
-1. A android application has been developed for demo using Flutter.
 
-    Android apk file - https://github.com/ropali/whats_my_bike_worth/releases
-
-    Repo - https://github.com/ropali/whats_my_bike_worth
-2. The same app has been converted to web app as well.Deployed on heroku, find the demo here
-https://whatsmybikeworth.herokuapp.com
 
 ## Installation
 Clone this repo in your local machine. Create a virtual environment to install the packages like this,
@@ -92,6 +93,16 @@ To train the model you can start the training by using this command,
 > python -m src.models.train_model
 ```
 All the in between steps like pre-processing,feature engineering, outlier removal will be performed automatically. All the generated models will be saved in `models` directory.
+
+The model will be trained on the data using various algorithms. After the training finishes all the models performance will be compared and the model with best `R2` score will selected. It will also give the option to perform automatic hyper parameters tuning on the best model.
+
+Following algoriths are used for training.
+- LinearRegression
+- KNeighborsRegressor
+- RandomForestRegressor
+- GradientBoostingRegressor
+
+You can add more algorithms by editing the `models/model_factory.py` file.
 
 ## Visualization
 To generate basic visualization for the dataset, you can use this command.
